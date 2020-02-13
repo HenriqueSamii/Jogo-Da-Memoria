@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
+    <title>Jogo da Memoria</title>
+</head>
+
+<body>
+    <style type="text/css">
+        body {
+            background-color: #d1e04e;
+        }
+
+        #estiloPagina {
+            width: 55%;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-family: "Arial Black";
+        }
+
+        .linhas {
+            clear: both;
+        }
+
+        .colunas {
+            float: left;
+            margin: 0.5em 0.5em 0.5em 0.5em;
+        }
+
+        .botao {
+            background-color: white;
+            color: black;
+            border: 2px solid #555555;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        .botao:hover {
+            background-color: #555555;
+            color: white;
+        }
+    </style>
+    <div id="estiloPagina">
+        <h1>Jogo Da Memoria</h1>
+        <div id='tabelaCartas'></div>
+        <div id="textoVitoria"></div>
+        <button class='botao' id="botaoJogo"> Iniciar/Reiniciar Jogo</button>
+    </div>
+
+    <script>
+        ////////////////////////////importante por
+        var app = {};
+        app.getComponente = function (nome) {
+            if (!app[nome]) {
+                app[nome] = { $ctrl: {} };
+            }
+            return app[nome];
+        }
+        ////////////////////////////////////comeco c1
+        let c1 = app.getComponente('c1');
+        let $ctrl1 = c1.$ctrl;
+        $ctrl1.iniciarjogo = function () {
+            var cartaEscolhida = '';
+            var cartaAnterio = '';
+            var certas = [];
+            var cartax1 = '';
+            var cartax2 = '';
+            var timerNewGame = '';
+            var contador = 0;
+            // baralhar cartas
+            function shuffle(a) {
+                var j, x, e;
+                for (e = a.length; e; e--) {
+                    j = Math.floor(Math.random() * e);
+                    x = a[e - 1];
+                    a[e - 1] = a[j];
+                    a[j] = x;
+                }
+                return a;
+            };                  
+            //Mostra as cartas
+            function tabelaCartas() {
+
+                var cI = 1;
+                var cartaPar = [];
+                while (cI <= 8) {
+                    cartaPar.push('cartasImg/carta' + cI + '.jpg')
+                    cI++;
+                }
+                var parDeCartas = cartaPar.concat(cartaPar);
+                var cartasAlia = shuffle(parDeCartas);
+
+                for (var i = 0; i < 4; i++) {
+                    var divL = jQuery('<div/>', {
+                        id: 'divLinha' + i,
+                        class: 'linhas'
+                    });
+                    $('#tabelaCartas').append(divL);
+
+                    for (var y = 0; y < 4; y++) {
+
+                        var divC = jQuery('<div/>', {
+                            id: 'coluna' + contador,
+                            class: 'colunas'
+                        });
+           
+                        var imgCartas = jQuery('<img>', {
+                            class: 'Img',
+                            id: contador,
+                            src: cartasAlia[contador],
+                            width: "5.9375em",
+                            height: "8.65625em"
+                        });
+                        contador++;
+                        ////////
+                        $(divC).append(imgCartas);
+                        $(divL).append(divC);
+                    }
+                }
+
+                $("img")
+                    .click(function () {
+                        if ($(this).attr("src") != 'cartasImg/costas.png') return;
+
+                        if (certas.indexOf(cartasAlia[$(this).attr("id")]) != -1) return;
+                        //$(this).fadeOut();
+
+                        //$(this).fadeIn(function () {              })
+                        if (cartax2 != '') {
+                            cartax1.attr("src", 'cartasImg/costas.png');
+                            cartax2.attr("src", 'cartasImg/costas.png');
+                            cartax1 = '';
+                            cartax2 = '';
+                        }
+
+                        if (cartaEscolhida == '') {
+
+                            $(this).fadeOut();
+                            $(this).fadeIn(function () { $(this).attr("src", cartasAlia[$(this).attr("id")]); });
+
+                            cartaEscolhida = cartasAlia[$(this).attr("id")];
+                            cartaAnterio = $(this);
+                            cartax1 = $(this);
+                            cartax2 = '';
+                        }
+                        else {
+                            if (cartaEscolhida == cartasAlia[$(this).attr("id")]) {
+                                if (cartaAnterio.attr("id") != $(this).attr("id")) {
+                                    $(this).fadeOut();
+                                    $(this).fadeIn(function () { $(this).attr("src", cartasAlia[$(this).attr("id")]); });
+                                    certas.push(cartasAlia[$(this).attr("id")]);
+                                    if (certas.length == 8) {
+                                        $("#textoVitoria").append("Ganhou!!! <br> O seu tempo foi de " +
+                                            Math.ceil((new Date() - timerNewGame) / 1000) + " segundos. <br> Quer jogar de novo?");
+                                    }
+                                }
+                                else {
+                                    cartaAnterio.attr("src", 'cartasImg/costas.png');
+                                    cartaAnterio = '';
+                                }
+                                //console.log(certas);
+                            } else {
+                                cartax2 = $(this);
+                                $(this).fadeOut();
+                                $(this).fadeIn(function () { $(this).attr("src", cartasAlia[$(this).attr("id")]); });
+
+                                cartaAnterio = '';
+                            }
+                            cartaEscolhida = '';
+                        }
+                    });
+            }
+            // iniciar jogo
+            $("#botaoJogo").click(function () {
+                $('#tabelaCartas').empty();
+                $("#textoVitoria").empty();
+                contador = 0;
+                cartaAnterio = '';
+                cartaEscolhida = '';
+                cartax1 = '';
+                cartax2 = '';
+                certas = [];
+                timerNewGame = new Date();
+                tabelaCartas();
+                setTimeout(function () { $(".Img").attr("src", 'cartasImg/costas.png') }, 3000)
+            });
+            ////////////////////////////////////////////////////////////////        
+            tabelaCartas();
+        }
+        $(function () {
+            console.log(app.c1.$ctrl.iniciarjogo());
+        });
+    </script>
+
+</body>
+
+</html>
